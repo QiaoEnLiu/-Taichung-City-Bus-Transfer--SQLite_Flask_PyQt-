@@ -1,52 +1,12 @@
 import sqliteConnect
-import pandas as pd
 
-from TaichungBusStopDataHeader import DataHeader
+from TaichungBusStopDataHeader import stopDataModel
 
-headerName = DataHeader()
+theStop = stopDataModel()
 
-# TaichungCityBusStopData = '臺中市市區公車站牌資料'
-TaichungCityBusStopData = '測試資料集'
+TaichungCityBusStopData = '臺中市市區公車站牌資料'
+# TaichungCityBusStopData = '測試資料集'
 
-#region 方法
-
-#region 行經該站的公車編號
-def busesInStop(stopInfo):
-    busID_AtStop = []
-    for bus in stopInfo:
-        if bus[headerName.busID] not in busID_AtStop:
-            busID_AtStop.append(bus[headerName.busID])
-    return busID_AtStop
-#endregion
-
-#region 撘乘站至目的地站
-def stopsVector(take, des):
-    sameID = take[headerName.busID] == des[headerName.busID] # 同路線
-    sameBoundRound = take[headerName.roundTrip] == des[headerName.roundTrip] # 同方向
-    vector = take[headerName.stopID] < des[headerName.stopID] # 目的地站要在撘乘站之後
-
-    return sameID and sameBoundRound and vector
-#endregion
-
-
-#region 資料轉字典
-def dataToDict(data, header):
-    data = pd.DataFrame(data, columns = header)
-    data = data.to_dict(orient = 'records')
-    return data
-#endregion
-
-#region 非重覆清單，資料若已出現在清單中則不附加進
-#簡化用於去除重覆的記憶迴圈法
-def unduplicateList(appendToList, appendedData):
-        
-    if appendedData not in appendToList:
-        #從未出現過才附加
-        appendToList.append(appendedData)
-        
-#endregion
-
-#endregion
 
 
 desStopName = "逢甲大學(福星路)"
@@ -58,35 +18,35 @@ takeStopName = "吉峰東自強路口"
 tableHeader = sqliteConnect.getHeader(TaichungCityBusStopData)
 
 #region 目的地站
-sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, headerName.stopName_CN, desStopName)
+sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, theStop.stopName_CN, desStopName)
 desBusStop = sqliteConnect.selectSQL(sql)
-desBusStop = dataToDict(desBusStop, tableHeader)
-desBusesID = busesInStop(desBusStop)
+desBusStop = theStop.dataToDict(desBusStop, tableHeader)
+desBusesID = theStop.busesInStop(desBusStop)
 
 desInfo = []
 for id in desBusesID:
-    sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, headerName.busID, id)
+    sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, theStop.busID, id)
     data = sqliteConnect.selectSQL(sql)
-    data = dataToDict(data, tableHeader)
+    data = theStop.dataToDict(data, tableHeader)
     desInfo.extend(data)
 #endregion
 
 #region 撘乘站
-sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, headerName.stopName_CN, takeStopName)
+sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, theStop.stopName_CN, takeStopName)
 takeBusStop = sqliteConnect.selectSQL(sql)
-takeBusStop = dataToDict(takeBusStop, tableHeader)
-takeBusesID = busesInStop(takeBusStop)
+takeBusStop = theStop.dataToDict(takeBusStop, tableHeader)
+takeBusesID = theStop.busesInStop(takeBusStop)
 # print(takeBusesID)
 
 takeInfo = []
 for id in takeBusesID:
-    sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, headerName.busID, id)
+    sql = "SELECT * FROM {} WHERE {} = '{}'".format(TaichungCityBusStopData, theStop.busID, id)
     data = sqliteConnect.selectSQL(sql)
-    data = dataToDict(data, tableHeader)
+    data = theStop.dataToDict(data, tableHeader)
     takeInfo.extend(data)
 
-for stop in takeInfo:
-    print(stop)
+# for stop in takeInfo:
+#     print(stop)
 
 #endregion
 
@@ -95,20 +55,17 @@ TF_to = []
 
 for toDes in desInfo:
     for fromTake in takeInfo:
-        # print(toDes[headerName.stopName_CN], fromTake[headerName.stopName_CN], toDes[headerName.stopName_CN] == fromTake[headerName.stopName_CN])
-        if toDes[headerName.stopName_CN] == fromTake[headerName.stopName_CN]:
+        if toDes[theStop.stopName_CN] == fromTake[theStop.stopName_CN]:
 
-            unduplicateList(to_TF, fromTake)
-            unduplicateList(TF_to, toDes)
+            theStop.unduplicateList(to_TF, fromTake)
+            theStop.unduplicateList(TF_to, toDes)
 
 
 # for stop in to_TF:
 #     print(stop)
 
-print(to_TF)
 
-
-to_TF_ID = busesInStop(to_TF)
+to_TF_ID = theStop.busesInStop(to_TF)
 
 # print(to_TF_ID)
 
@@ -118,10 +75,10 @@ selectTakeBus = str(input("Bus at {}\n{}\nSearch Bus: ".format(takeStopName, to_
 sameStop = []
 for to_stop in to_TF:
         
-    if to_stop[headerName.busID] == selectTakeBus:
+    if to_stop[theStop.busID] == selectTakeBus:
         for take in takeBusStop:
-            if stopsVector(take, to_stop):
-                unduplicateList(sameStop, to_stop[headerName.stopName_CN])
+            if theStop.stopsVector(take, to_stop):
+                theStop.unduplicateList(sameStop, to_stop[theStop.stopName_CN])
 
 # print(sameStop)
 
@@ -130,11 +87,11 @@ selectTransferStop = str(input("Transfer Stop {}\nSelect Transfer Stop: ".format
 
 TF_Stop_to = []
 for tf in TF_to:
-    if tf[headerName.stopName_CN] == selectTransferStop:
+    if tf[theStop.stopName_CN] == selectTransferStop:
         for des in desBusStop:
-            if stopsVector(tf, des):
-                unduplicateList(TF_Stop_to, tf)
-TF_to_ID = busesInStop(TF_Stop_to)
+            if theStop.stopsVector(tf, des):
+                theStop.unduplicateList(TF_Stop_to, tf)
+TF_to_ID = theStop.busesInStop(TF_Stop_to)
 
 print()
 selectBusToDes = str(input("At {}\nSelect Bus {}: ".format(selectTransferStop, TF_to_ID) or TF_to_ID[0]))
