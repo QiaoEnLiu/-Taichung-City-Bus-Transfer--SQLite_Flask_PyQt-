@@ -1,7 +1,7 @@
 import sqliteConnect
 import pandas as pd
 
-from TaichungBusStopDataHeader import DataHeader
+from TaichungBusStopDataModel import DataHeader
 
 headerName = DataHeader()
 

@@ -1,6 +1,6 @@
 import sqliteConnect
 
-from TaichungBusStopDataHeader import stopDataModel
+from TaichungBusStopDataModel import stopDataModel
 
 theStop = stopDataModel()
 

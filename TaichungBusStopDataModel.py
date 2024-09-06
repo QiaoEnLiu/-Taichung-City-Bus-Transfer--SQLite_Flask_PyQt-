@@ -44,6 +44,11 @@ class stopDataModel:
         return data
     #endregion
 
+    #region
+    def sameBus(self, takeStopBuses, desStopBuses):
+        return set(takeStopBuses) & set(desStopBuses)
+    #endregion
+
     #region 非重覆清單，資料若已出現在清單中則不附加進
     #簡化用於去除重覆的記憶迴圈法
     def unduplicateList(self, appendToList, appendedData):
